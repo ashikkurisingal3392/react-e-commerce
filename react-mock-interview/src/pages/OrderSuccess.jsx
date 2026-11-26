@@ -1,6 +1,8 @@
 import { CircleCheck, Package, ShoppingBag, Truck } from 'lucide-react'
 import React from 'react'
-import { useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useEffectEvent } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
 function OrderSuccess() {
    
@@ -14,6 +16,38 @@ function OrderSuccess() {
         return <div>No order information found</div>
     }
     
+
+    const getAOrderDetails=async()=>{
+
+
+      try{
+
+        const response = await fetch(`/http://localhost:3000/api/orders/${order._id}`,{
+
+          headers:{
+            "Content-Type":"application/json"
+          }
+        })
+
+      
+        const data = await response.json()
+
+        console.log("api response",data);
+        
+
+      }
+      catch(err){
+
+
+      }
+    }
+
+
+    useEffect(()=>{
+
+
+      getAOrderDetails()
+    },[])
     
   return (
      <div className="min-h-screen bg-gray-50 px-4 py-12">
@@ -134,11 +168,17 @@ function OrderSuccess() {
 
         {/* Continue Shopping */}
         <div className="text-center">
+         <Link to={'/'}>
 
-          <button className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition">
+          <button 
+
+          className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition">
             Continue Shopping
           </button>
 
+         
+         </Link>
+         
           <p className="text-sm text-gray-500 mt-5">
             Thank you for shopping with us!
           </p>

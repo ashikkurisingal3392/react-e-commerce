@@ -6,6 +6,7 @@ const connectDB = require('./config/db')
 
 const orderRoutes = require('./routes/orderRoutes')
 
+
 require('dotenv').config()
 
 
@@ -19,6 +20,8 @@ app.use(express.json())
 
 
 app.use('/api/orders',orderRoutes)
+
+
 
 //test route
 

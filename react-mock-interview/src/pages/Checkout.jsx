@@ -7,83 +7,142 @@ import { useNavigate } from 'react-router-dom'
 function Checkout() {
 
 
-  const cartItems = useSelector((state)=>state.cart.items)
+  const cartItems = useSelector((state) => state.cart.items)
 
-  const subTotal = cartItems.reduce((total,item)=> total + item.price * item.quantity,0)
-  const shipping = subTotal ===0?0: subTotal >= 50 ?0:4.99
-  const total = (subTotal+shipping)
+  const subTotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+  const shipping = subTotal === 0 ? 0 : subTotal >= 50 ? 0 : 4.99
+  const total = (subTotal + shipping)
 
-  const dispatch =useDispatch()
-  
+  const dispatch = useDispatch()
+
   // const[placeOrder,setPlaceOrder]=useState(null)
 
-  const navigate= useNavigate()
-   
-  const [user,setUser]=useState({
-    firstName:"",
-    lastName:"",
-    email:"",
-    phone:"",
-    address:{
-      street:"",
-      city:"",
-      postCode:"",
-      country:"united Kingdom"
+  const navigate = useNavigate()
+
+  const [user, setUser] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: {
+      street: "",
+      city: "",
+      postCode: "",
+      country: "united Kingdom"
     }
 
   })
 
-  const handlePlaceOrder=()=>{
+  const[isSubmitting,setIsSubmitting] = useState(false)
 
-    if(cartItems.length ===0){
+  const handlePlaceOrder = async () => {
+
+   
+
+    if (cartItems.length === 0) {
       alert("your cart is empty")
       return
     }
 
-    if(!user.firstName.trim() || !user.lastName.trim() || !user.email.trim() ||  !user.phone.trim()
+    try{
+
+      if (!user.firstName.trim() || !user.lastName.trim() || !user.email.trim() || !user.phone.trim()
 
       || !user.address.street.trim() || !user.address.city.trim() || !user.address.postCode.trim() || !user.address.country.trim()
-    ){
+    ) {
       alert("please fill the forms")
       return
     }
+       
+     setIsSubmitting(true)
 
-    
-    const order ={
-      orderNumber:`ORD-${Date.now()}`,
-      customer:user,
-      products:cartItems,
-      subTotal:Number( subTotal.toFixed(2)),
-      shipping:Number(shipping.toFixed(2)),
-      total:Number(total.toFixed(2)),
-      status:"confirmed"
+    const order = {
+      orderNumber: `ORD-${Date.now()}`,
+      customer: user,
+      products: cartItems,
+      subTotal: Number(subTotal.toFixed(2)),
+      shipping: Number(shipping.toFixed(2)),
+      total: Number(total.toFixed(2)),
+      status: "confirmed"
     }
-  console.log(order);
-  //setPlaceOrder(order)
-  /**
-   * data passing throug useNavigate
-   */
-  navigate('/success',{
-    state:{order:order}
-  })
-    dispatch(clearCart())
+    //console.log(order);
 
-    setUser({
-       firstName:"",
-        lastName:"",
-        email:"",
-    phone:"",
-    address:{
-      street:"",
-      city:"",
-      postCode:"",
-      country:"united Kingdom"
+
+    /**
+     * using fetch method for api call
+     */
+
+
+    const response = await fetch("http://localhost:3000/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(order)
+    })
+     
+    if(!response.ok){
+
+      const erroData =await response.json()
+      throw new Error(erroData.message ||"Failed to create order")
     }
+
+    const data = await response.json()
+
+    console.log(data);
+
+     setUser({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      address: {
+        street: "",
+        city: "",
+        postCode: "",
+        country: "united Kingdom"
+      }
 
     })
 
+
+
+        dispatch(clearCart())
+
+    //setPlaceOrder(order)
+    /**
+     * data passing throug useNavigate
+     */
+
+    navigate('/success', {
+      state: { order: data.order }
+    })
+
     
+
+   
+
+
+    }
+    catch(err){
+
+      console.log("server error",err.message);
+      
+
+
+    }
+    finally{
+      setIsSubmitting(false)
+    }
+
+    
+
+
   }
+
+
+  console.log(isSubmitting);
+  
 
   /**
    * passing props
@@ -93,8 +152,8 @@ function Checkout() {
   // }
 
   return (
-    
-         <div className="min-h-screen bg-gray-50 py-10 px-4">
+
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
 
       <div className="max-w-6xl mx-auto">
 
@@ -127,7 +186,7 @@ function Checkout() {
                   <input
                     type="text"
                     value={user.firstName}
-                    onChange={(e)=>setUser({...user,firstName:e.target.value})}
+                    onChange={(e) => setUser({ ...user, firstName: e.target.value })}
                     placeholder="Enter first name"
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-black"
                   />
@@ -140,7 +199,7 @@ function Checkout() {
                   <input
                     type="text"
                     value={user.lastName}
-                    onChange={(e)=>setUser({...user,lastName:e.target.value})}
+                    onChange={(e) => setUser({ ...user, lastName: e.target.value })}
                     placeholder="Enter last name"
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-black"
                   />
@@ -153,7 +212,7 @@ function Checkout() {
                   <input
                     type="email"
                     value={user.email}
-                    onChange={(e)=>setUser({...user,email:e.target.value})}
+                    onChange={(e) => setUser({ ...user, email: e.target.value })}
                     placeholder="example@email.com"
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-black"
                   />
@@ -166,7 +225,7 @@ function Checkout() {
                   <input
                     type="tel"
                     value={user.phone}
-                    onChange={(e)=>setUser({...user,phone:e.target.value})}
+                    onChange={(e) => setUser({ ...user, phone: e.target.value })}
                     placeholder="Enter phone number"
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-black"
                   />
@@ -191,7 +250,7 @@ function Checkout() {
                   <input
                     type="text"
                     value={user.address.street}
-                    onChange={(e)=>setUser({...user,address:{...user.address,street:e.target.value}})}
+                    onChange={(e) => setUser({ ...user, address: { ...user.address, street: e.target.value } })}
                     placeholder="House number and street"
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-black"
                   />
@@ -206,7 +265,7 @@ function Checkout() {
                     <input
                       type="text"
                       value={user.address.city}
-                      onChange={(e)=>setUser({...user,address:{...user.address,city:e.target.value}})}
+                      onChange={(e) => setUser({ ...user, address: { ...user.address, city: e.target.value } })}
                       placeholder="City"
                       className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-black"
                     />
@@ -219,7 +278,7 @@ function Checkout() {
                     <input
                       type="text"
                       value={user.address.postCode}
-                      onChange={(e)=>setUser({...user,address:{...user.address,postCode:e.target.value}})}
+                      onChange={(e) => setUser({ ...user, address: { ...user.address, postCode: e.target.value } })}
                       placeholder="Postcode"
                       className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-black"
                     />
@@ -234,7 +293,7 @@ function Checkout() {
                   <input
                     type="text"
                     value={user.address.country}
-                      onChange={(e)=>setUser({...user,address:{...user.address,country:e.target.value}})}
+                    onChange={(e) => setUser({ ...user, address: { ...user.address, country: e.target.value } })}
                     placeholder="United Kingdom"
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-black"
                   />
@@ -299,56 +358,56 @@ function Checkout() {
               <h2 className="text-xl font-semibold mb-6">
                 Order Summary
               </h2>
-             
+
               {
-                cartItems.length >0 ? 
-                
-                cartItems.map((item)=>(
+                cartItems.length > 0 ?
+
+                  cartItems.map((item) => (
 
                     <div key={item.id} className="flex gap-4 mb-5">
-             
-
-                <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <img src={item.thumbnail} alt={item.title}/>
-                </div>
-
-                <div className="flex-1">
-                  <h3 className="font-medium">
-                   {item.title}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Quantity:{item.quantity}
-                  </p>
-                  <p className="font-semibold mt-1">
-                    £{(item.price*item.quantity).toFixed(2)}
-                  </p>
-                </div>
-
-              
-
-            </div>
 
 
-                ))
-                :(
+                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <img src={item.thumbnail} alt={item.title} />
+                      </div>
+
+                      <div className="flex-1">
+                        <h3 className="font-medium">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Quantity:{item.quantity}
+                        </p>
+                        <p className="font-semibold mt-1">
+                          £{(item.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
 
 
-                  <div>
 
-                    <p>Cart is Empty</p>
-
-                  </div>
+                    </div>
 
 
-                )
+                  ))
+                  : (
+
+
+                    <div>
+
+                      <p>Cart is Empty</p>
+
+                    </div>
+
+
+                  )
               }
 
 
-             
-            
 
-       
-             
+
+
+
+
 
               <hr className="my-5" />
 
@@ -371,10 +430,15 @@ function Checkout() {
 
               <button
                 type="button"
+               disabled={isSubmitting}
+              
                 onClick={handlePlaceOrder}
                 className="w-full bg-black text-white py-3 rounded-lg mt-6 hover:bg-gray-800 transition"
               >
-                Place Order
+                {
+                  isSubmitting?"Processing....":"Place Order"
+                }
+                
               </button>
 
               <p className="text-xs text-gray-500 text-center mt-4">
@@ -389,7 +453,7 @@ function Checkout() {
 
       </div>
 
-      
+
     </div>
   )
 }
